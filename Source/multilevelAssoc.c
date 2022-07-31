@@ -220,7 +220,7 @@ int findInCache (CacheT* thecache[], AddressT where, ReftypeT reftype) {
     // find where the item actually is and incur the cost of looking it up; since
     // we assume infinite main memory, there is no need to look up in DRAM
     for (int i = startL2; i < offEdge; i++) {
-        // inclur the lookup overhead at each level: in a real cache done in parallel
+        // incur the lookup overhead at each level: in a real cache done in parallel
         // so only score the max value
         if (i > maxI) maxI = i;
         if (thecache[i]->lookupoverhead > lookupcost)
@@ -242,6 +242,8 @@ int findInCache (CacheT* thecache[], AddressT where, ReftypeT reftype) {
           // incrIcost (thecache[foundat]->stats->hitcost, hitcost);
            incrIcount (thecache[foundat]->stats->hitcount);
         }
+    // correction: miss costs handled where the item is found so should not duplicate
+    // this here
     } else if (reftype == READ) {
         incrDRcost (thecache[L1Dindex]->stats->misscost, hitcost);
         if (foundat < offEdge) {
@@ -268,7 +270,9 @@ int findInCache (CacheT* thecache[], AddressT where, ReftypeT reftype) {
 
 #define L1INDEX(cache,reftype) (cache[0]->split?(reftype==FETCH?0:1):0)
 
+#ifdef DEBUG
 static ELAPSED refcount = 0;
+#endif DEBUG
 
 // check the cacche has no 0 address tag with VALID set on
 static bool cachecheck (CacheT* thecache[]) {
@@ -291,7 +295,9 @@ void handleReference (CacheT* thecache[], AddressT where, ReftypeT reftype) {
     // in L1, no miss costs to account for
     ELAPSED lookupcost = thecache[indexL1]->lookupoverhead,
             hittime = thecache[indexL1]->hittime;
-refcount++;
+#ifdef DEBUG
+    refcount++;
+#endif DEBUG
     if (foundat == indexL1) {
 #ifdef DEBUG
         fprintf(stderr,"hit 0x%x, hitcost = %lu\n", where, hittime);
@@ -301,20 +307,24 @@ refcount++;
             incrIcost (thecache[indexL1]->stats->hitcost, hittime);
        } else if (reftype == READ) {
             incrDRcount (thecache[indexL1]->stats->hitcount);
-            incrDRcost (thecache[indexL1]->stats->hitcost, hittime);
+            // assume data read cost fully pipelined
         } else if (reftype == WRITE) {
             incrDWcount (thecache[indexL1]->stats->hitcount);
-            incrDWcost (thecache[indexL1]->stats->hitcost, hittime);
+            // assume data write cost fully pipelined
         }
     } else {  // a miss: add cost of L1 reference on a miss
          // account for the cost of copying to here from layer where block is found
+         // then add the read latency for this layer
          LatencyT misscost = thecache[foundat]->hittime;
          if (reftype == FETCH) {
-            incrIcost (thecache[indexL1]->stats->misscost, hittime);
+            incrIcount (thecache[indexL1]->stats->misscount);
+            incrIcost (thecache[indexL1]->stats->hitcost, hittime);
          } else if (reftype == READ) {
+            incrDRcount (thecache[indexL1]->stats->misscount);
             incrDRcost (thecache[indexL1]->stats->misscost, hittime);
          } else if (reftype == WRITE) {
-            incrDWcost (thecache[indexL1]->stats->misscost, hittime);
+             incrDWcount (thecache[indexL1]->stats->misscount);
+             incrDWcost (thecache[indexL1]->stats->misscost, hittime);
          }
          handleMiss (thecache, where, reftype, foundat);
     }
