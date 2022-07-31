@@ -314,18 +314,7 @@ void handleReference (CacheT* thecache[], AddressT where, ReftypeT reftype) {
         }
     } else {  // a miss: add cost of L1 reference on a miss
          // account for the cost of copying to here from layer where block is found
-         // then add the read latency for this layer
-         LatencyT misscost = thecache[foundat]->hittime;
-         if (reftype == FETCH) {
-            incrIcount (thecache[indexL1]->stats->misscount);
-            incrIcost (thecache[indexL1]->stats->misscost, hittime);
-         } else if (reftype == READ) {
-            incrDRcount (thecache[indexL1]->stats->misscount);
-            incrDRcost (thecache[indexL1]->stats->misscost, hittime);
-         } else if (reftype == WRITE) {
-            incrDWcount (thecache[indexL1]->stats->misscount);
-            incrDWcost (thecache[indexL1]->stats->misscost, hittime);
-         }
+         // then add the read latency for this layer -- done in handlemiss
          handleMiss (thecache, where, reftype, foundat);
     }
 }
