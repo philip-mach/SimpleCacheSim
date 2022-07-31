@@ -253,12 +253,12 @@ int findInCache (CacheT* thecache[], AddressT where, ReftypeT reftype) {
     } else {
         incrDWcost (thecache[L1Dindex]->stats->misscost, hitcost);
         if (foundat < offEdge) {
-           //incrDWcost (thecache[foundat]->stats->hitcost, hitcost);
+           // incrDWcost (thecache[foundat]->stats->hitcost, hitcost);
            incrDWcount (thecache[foundat]->stats->hitcount);
         }
     }
 
-#ifdef DEBUG
+#ifdef // DEBUG
     fprintf(stderr, "Found at %d: 0x%x [%c]", foundat, where, reftype);
     // not found if foundat still == offEdge
     if (foundat > maxfoundat) { maxfoundat = foundat;
@@ -272,7 +272,7 @@ int findInCache (CacheT* thecache[], AddressT where, ReftypeT reftype) {
 
 #ifdef DEBUG
 static ELAPSED refcount = 0;
-#endif DEBUG
+#endif // DEBUG
 
 // check the cacche has no 0 address tag with VALID set on
 static bool cachecheck (CacheT* thecache[]) {
@@ -297,11 +297,11 @@ void handleReference (CacheT* thecache[], AddressT where, ReftypeT reftype) {
             hittime = thecache[indexL1]->hittime;
 #ifdef DEBUG
     refcount++;
-#endif DEBUG
-    if (foundat == indexL1) {
+#endif // DEBUG
+    if (foundat == indexL1) { // found in L1 -- only cost hit time for fetch
 #ifdef DEBUG
         fprintf(stderr,"hit 0x%x, hitcost = %lu\n", where, hittime);
-#endif
+#endif // DEBUG
         if (reftype == FETCH) {
             incrIcount (thecache[indexL1]->stats->hitcount);
             incrIcost (thecache[indexL1]->stats->hitcost, hittime);
@@ -318,13 +318,13 @@ void handleReference (CacheT* thecache[], AddressT where, ReftypeT reftype) {
          LatencyT misscost = thecache[foundat]->hittime;
          if (reftype == FETCH) {
             incrIcount (thecache[indexL1]->stats->misscount);
-            incrIcost (thecache[indexL1]->stats->hitcost, hittime);
+            incrIcost (thecache[indexL1]->stats->misscost, hittime);
          } else if (reftype == READ) {
             incrDRcount (thecache[indexL1]->stats->misscount);
             incrDRcost (thecache[indexL1]->stats->misscost, hittime);
          } else if (reftype == WRITE) {
-             incrDWcount (thecache[indexL1]->stats->misscount);
-             incrDWcost (thecache[indexL1]->stats->misscost, hittime);
+            incrDWcount (thecache[indexL1]->stats->misscount);
+            incrDWcost (thecache[indexL1]->stats->misscost, hittime);
          }
          handleMiss (thecache, where, reftype, foundat);
     }
