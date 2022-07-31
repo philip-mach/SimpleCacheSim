@@ -258,7 +258,7 @@ int findInCache (CacheT* thecache[], AddressT where, ReftypeT reftype) {
         }
     }
 
-#ifdef // DEBUG
+#ifdef DEBUG
     fprintf(stderr, "Found at %d: 0x%x [%c]", foundat, where, reftype);
     // not found if foundat still == offEdge
     if (foundat > maxfoundat) { maxfoundat = foundat;
@@ -355,7 +355,7 @@ static void handleMiss (CacheT* thecache[], AddressT where, ReftypeT reftype, in
 //printf("placing 0x%x in $[%d]\n", where, level);
 #ifdef DEBUG
         fprintf(stderr,"placing 0x%x in $[%d] ", where, level);
-#endif
+#endif // DEBUG
         if (candidate >= associativity) { // none invalid, choose a victim
             candidate = assocFindVictim (thecache[i]);
             // We need an address that takes us to the block we are evicting:
